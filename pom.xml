@@ -83,5 +83,7 @@
     <module>springboot-webflux-5-thymeleaf-mongodb</module>
 		<module>springboot-webflux-6-redis</module>
 		<module>springboot-webflux-7-redis-cache</module>
-	</modules>
+        <module>springboot-self4j-mdc</module>
+        <module>springboot-norepeatsubmit</module>
+    </modules>
 </project>
