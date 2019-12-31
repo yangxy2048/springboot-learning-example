@@ -85,5 +85,7 @@
 		<module>springboot-webflux-7-redis-cache</module>
         <module>springboot-self4j-mdc</module>
         <module>springboot-norepeatsubmit</module>
+
+        <module>springboot-redis-lua-ratelimit</module>
     </modules>
 </project>
