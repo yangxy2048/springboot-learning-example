@@ -15,6 +15,12 @@ public @interface RateLimiter {
      * @return
      */
     String key() default "rate:limiter";
+
+    /**
+     * key生成方式
+     * @return
+     */
+    String keyGenerator() default "";
     /**
      * 单位时间限制通过请求数
      * @return

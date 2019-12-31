@@ -10,6 +10,11 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spring.springboot.config.CacheConfig;
+import org.spring.springboot.keygenerator.KeyConfig;
+import org.spring.springboot.keygenerator.KeyGenerator;
+import org.spring.springboot.keygenerator.KeyGeneratorSupport;
+import org.spring.springboot.keygenerator.RedisCacheKeyGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -17,9 +22,7 @@ import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * <p>
@@ -33,11 +36,14 @@ import java.util.UUID;
 @Component
 public class RateLimterAspect {
     private static final Logger LOGGER = LoggerFactory.getLogger(RateLimterAspect.class);
-
     @Autowired
     RedisTemplate redisTemplate;
     @Autowired
     private DefaultRedisScript<Number> redisluaScript;
+    @Autowired
+    private RedisCacheKeyGenerator redisCacheKeyGenerator;
+    @Autowired
+    private KeyGeneratorSupport keyGeneratorSupport;
 
     // 方式一
     @Pointcut("@annotation(rateLimiter)")
@@ -66,7 +72,22 @@ public class RateLimterAspect {
         String limitKey = rateLimiter.key();
         Preconditions.checkNotNull(limitKey);
 
-         //key定制：ip:类名:方法名:key
+        /**
+         * 获取key生成策略
+         */
+        String keyGeneratorName = rateLimiter.keyGenerator();
+        if (StringUtils.isEmpty(keyGeneratorName)){
+            keyGeneratorName = KeyConfig.DEFAULT_KEY_GENERATOR;
+        }
+        MethodSignature methodSignature = (MethodSignature) proceedingJoinPoint.getSignature();
+        Method method = methodSignature.getMethod();
+        Class<?> targetClass = method.getDeclaringClass();
+
+        KeyGenerator keyGenerator = keyGeneratorSupport.getKeyGenerator(keyGeneratorName);
+        String key =limitKey+":"+ keyGenerator.generate(targetClass,method);
+        LOGGER.debug("limitKey="+key);
+
+        //key定制：ip:类名:方法名:key
 //        MethodSignature methodSignature = (MethodSignature) proceedingJoinPoint.getSignature();
 //        Method method = methodSignature.getMethod();
 //        Class<?> targetClass = method.getDeclaringClass();
